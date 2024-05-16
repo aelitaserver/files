@@ -15,9 +15,14 @@
                     <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                         {{ __('Home') }}
                     </x-nav-link>
+                    @if(Auth::user()->role == 'admin')
                     <x-nav-link :href="route('files.create')" :active="request()->routeIs('files.create')">
                         {{ __('Upload') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('files.index')" :active="request()->routeIs('files.index')">
+                        {{ __('All Files') }}
+                    </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -86,9 +91,17 @@
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('files.create')">
-                    {{ __('Upload') }}
-                </x-responsive-nav-link>
+                @if(Auth::user()->role == 'admin')
+                    <x-responsive-nav-link :href="route('files.create')">
+                        {{ __('Files') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('files.create')">
+                        {{ __('Upload') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('files.index')">
+                        {{ __('All Files') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">

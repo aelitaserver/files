@@ -5,16 +5,30 @@ namespace App\Http\Controllers;
 use App\Models\File;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 
-class FileController extends Controller
+class FileController extends Controller implements HasMiddleware
 {
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(['auth', 'role:admin'], only: ['index', 'create', 'store']),
+        ];
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return view('files.index');
+        $files = File::get();
+
+        return view('files.index', compact('files'));
     }
 
     /**
@@ -37,19 +51,16 @@ class FileController extends Controller
         $file = $request->file('file');
         $user = User::find(Auth::user()->id);
 
-        $PATH = 'public/files/'.$user->id;
+        $PATH = 'storage/files/'.$user->id;
 
-        $name = $file->getClientOriginalName();
-        $name = preg_replace('/[^A-Za-z0-9 -]/', '_', $name);
-        $name = preg_replace('/  */', '-', $name);
 
-        $finalName = $name.'_'.time().'.'.$file->extension();
+        $finalName = time().'.'.$file->extension();
 
-        $id = $user->id;
         $request->file->storeAs($PATH, $finalName);
 
         $file = File::create([
-            'path' => $PATH,
+            'path' => $PATH.'/'.$finalName,
+            'original' => $file->getClientOriginalName(),
             'name' => $finalName,
             'user_id' => Auth::user()->id
         ]);
@@ -87,5 +98,16 @@ class FileController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function download(string $id)
+    {
+        $file = File::where('id', $id)->get()->first();
+
+        if(!$file) abort(404);
+
+        response()->download($file->path, $file->original);
+
+        return redirect()->back();
     }
 }
